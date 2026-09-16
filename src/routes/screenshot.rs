@@ -43,7 +43,7 @@ pub fn route() -> Router<Config> {
 
 /// Capture a full screenshot of `url`, resize it to `ow`, slice it
 /// into `frames` vertical chunks, write each chunk under
-/// `screenshot_dir/<host>/`, and respond with the resulting paths.
+/// `screenshot_dir/<host/path>/`, and respond with the resulting paths.
 async fn screenshot(
     State(config): State<Config>,
     Query(params): Query<Params>,
@@ -62,9 +62,11 @@ async fn screenshot(
     }
 
     let result = async {
-        let out_dir = config
-            .screenshot_dir
-            .join(params.url.host_str().unwrap_or_else(|| "host"));
+        let out_dir = config.screenshot_dir.join(format!(
+            "{}{}",
+            params.url.host_str().unwrap_or_default(),
+            params.url.path()
+        ));
         fs::create_dir_all(&out_dir).await?;
 
         // Delegate the screenshot to the browser worker
